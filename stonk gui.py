@@ -19,6 +19,8 @@ import json
 import pandas as pd
 import numpy as np
 
+from ib_insync import *
+
 
 LARGE_FONT = ("verdana", 12)
 NORM_FONT = ("verdana", 10)
@@ -27,6 +29,10 @@ SMALL_FONT = ("verdana", 8)
 style.use("ggplot")
 
 fig, ax1 = plt.subplots(figsize = (12,6))
+#fig = plt.figure()
+#ax1 = fig.add_subplot(111)
+
+
 
 Strat = "None"
 #counter to force a update
@@ -35,7 +41,7 @@ ProgramName = "Bo"
 
 resampleSize = "5Min"
 DataPace = "tick"
-candleWidth = 0.008
+candleWidth = 0.5
 
 paneCount = 1
 
@@ -46,6 +52,7 @@ chartLoad = True
 
 lightColor = "00A3E0"
 darkColor = "1883A54"
+window_length = 14
 
 EMAs = []
 SMAs = []
@@ -86,7 +93,7 @@ def addMiddleIndicator(what):
     				group.append(int(periods))
     				middleIndicator.append(group)
     				counter = 9000
-    				prtin("middle indicator set to: ", middleIndicator)
+    				print("middle indicator set to: ", middleIndicator)
     				midIQ.destroy()
 
     			b = ttk.Button(midIQ, text="submit", width=10, command=callback)
@@ -114,7 +121,7 @@ def addMiddleIndicator(what):
     				group.append(int(periods))
     				middleIndicator.append(group)
     				counter = 9000
-    				prtin("middle indicator set to: ", middleIndicator)
+    				print("middle indicator set to: ", middleIndicator)
     				midIQ.destroy()
 
     			b = ttk.Button(midIQ, text="submit", width=10, command=callback)
@@ -123,13 +130,13 @@ def addMiddleIndicator(what):
 
 
     	else:
-    		if what == "ema":
+    		if what == "sma":
     			midIQ = tk.Tk()
     			midIQ.wm_title("periods?")
-    			label = ttk.Label(midIQ, text="choose how many periods you want your EMA to be")
+    			label = ttk.Label(midIQ, text="choose how many periods you want your SMA to be")
     			label.pack(side="top", fill="x", pady=10)
     			e = ttk.Entry(midIQ)
-    			e.insert(0, 10)
+    			e.insert(0, 20)
     			e.pack()
     			e.focus_set()
 
@@ -144,7 +151,35 @@ def addMiddleIndicator(what):
     				group.append(int(periods))
     				middleIndicator.append(group)
     				counter = 9000
-    				prtin("middle indicator set to: ", middleIndicator)
+    				print("middle indicator set to: ", middleIndicator)
+    				midIQ.destroy()
+
+    			b = ttk.Button(midIQ, text="submit", width=10, command=callback)
+    			b.pack()
+    			tk.mainloop()
+
+    		if what == "ema":
+    			midIQ = tk.Tk()
+    			midIQ.wm_title("periods?")
+    			label = ttk.Label(midIQ, text="choose how many periods you want your EMA to be")
+    			label.pack(side="top", fill="x", pady=10)
+    			e = ttk.Entry(midIQ)
+    			e.insert(0, 9)
+    			e.pack()
+    			e.focus_set()
+
+    			def callback():
+    				global middleIndicator
+    				global counter
+
+    				#middleIndicator = []
+    				periods = (e.get())
+    				group = []
+    				group.append("sma")
+    				group.append(int(periods))
+    				middleIndicator.append(group)
+    				counter = 9000
+    				print("middle indicator set to: ", middleIndicator)
     				midIQ.destroy()
 
     			b = ttk.Button(midIQ, text="submit", width=10, command=callback)
@@ -158,10 +193,7 @@ def addTopIndicator(what):
     global topIndicator
     global counter
 
-    if DataPace == "tick":
-    	popupmsg("Indicators in Tick Data not available.")
-
-    elif what == "none":
+    if what == "none":
     	topIndicator = what
     	counter = 9000
 
@@ -184,7 +216,7 @@ def addTopIndicator(what):
     		periods = (e.get())
     		group = []
     		group.append("rsi")
-    		group.append(periods)
+    		group.append(int(periods))
 
     		topIndicator = group
     		counter = 9000
@@ -195,28 +227,20 @@ def addTopIndicator(what):
     	b.pack()
     	tk.mainloop()
 
-    elif what == "macd":
-    	topIndicator
-    	counter
-    	topIndicator = "macd"
-    	counter = 9000
-
 def addBottomIndicator(what):
     global bottomIndicator
     global counter
 
-    if DataPace == "tick":
-    	popupmsg("Indicators in Tick Data not available.")
 
-    elif what == "none":
+    if what == "none":
     	bottomIndicator = what
     	counter = 9000
 
 #create a enter box can be used for stock entering 
-    elif what == "rsi":
+    elif what == "macd":
     	rsiQ = tk.Tk()
     	rsiQ.wm_title("Periods?")
-    	label = ttk.Label(rsiQ, text = "Choose how many periods you want each RSI calculation to consider.")
+    	label = ttk.Label(rsiQ, text = "Choose how many periods you want each MACD calculation to consider.")
     	label.pack(side="top", fill="x", pady=10)
 
     	e = ttk.Entry(rsiQ)
@@ -241,13 +265,6 @@ def addBottomIndicator(what):
     	b = ttk.Button(rsiQ, text="Submit", width=10, command=callback)
     	b.pack()
     	tk.mainloop()
-
-    elif what == "macd":
-    	bottomIndicator
-    	counter
-    	bottomIndicator = "macd"
-    	counter = 9000
-
 
 
 
@@ -291,126 +308,123 @@ def popupmsg(msg):
 	B1.pack()
 	popup.mainloop()
 
+
+
 def animate(i):
 	global refreshRate
 	global counter
 
+	#create rsi calculations right here
+	def rsiIndicator(window_length):
+		#try:
+		datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
+		data = pd.read_csv(datafile, index_col = 'Date')
+		data.index = pd.to_datetime(data.index)
+		p = data['Close']
+		price = data['Close'].diff()
+
+		dUp, dDown = price.copy(), price.copy()
+		dUp[dUp < 0] = 0
+		dDown[dDown > 0] = 0
+
+		rollUp = dUp.ewm(span=window_length).mean()
+		rolldown = dDown.abs().ewm(span=window_length).mean()
+
+		RS1 = rollUp / rolldown
+		RSI1 = 100.0 - (100.0 / (1.0 + RS1))
+
+		return RSI1
+
 	if chartLoad:
 		if paneCount ==1:
-			if DataPace =="tick":
-				try:
-					if Strat == "None":
-						ax1 = plt.subplot2grid((6,4), (0,0), rowspan=5, colspan=4)
-						ax2 = plt.subplot2grid((6,4), (5,0), rowspan=1, colspan=4, sharex=ax1)
-						#eventually going to pull the csv from ib
-						datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
-						data = pd.read_csv(datafile, index_col = 'Date')
-						data.index = pd.to_datetime(data.index)
-						dvalues = data[['Open', 'High', 'Low', 'Close', 'Volume']].values.tolist()
-						vol = data['Volume']
-						price = data['Close']
-						pdates = mdates.date2num(data.index)
-						ohlc = [ [pdates[i]] + dvalues[i] for i in range(len(pdates)) ]
-						sma20 = data['Close'].rolling(20).mean()
-						ema9 = data['Close'].ewm(9).mean()
+			try:
+				# Main Graph
+				ax1 = plt.subplot2grid((6,4), (1,0), rowspan=3, colspan=4)
+				# Volume
+				ax2 = plt.subplot2grid((6,4), (4,0), rowspan=1, colspan=4, sharex=ax1)
+				# Bottom Indicator
+				ax3 = plt.subplot2grid((6,4), (5,0), rowspan=1, colspan=4, sharex=ax1)
+				# Top Indicator
+				ax0 = plt.subplot2grid((6,4), (0,0), rowspan=1, colspan=4, sharex=ax1)
 
-						ax1.clear()
-						#ax1.plot_date(date, price, "g", label="open")
-						candlestick_ohlc(ax1, ohlc, width=0.4, colorup='#77d879', colordown='#db3f3f')
-						ax1.plot_date(data.index, sma20, "g", label="SMA20")
-						ax1.plot_date(data.index, ema9, "b", label="EMA9")
-						ax2.fill_between(pdates, 0, vol)
+				#eventually going to pull the csv from ib
+				datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
+				data = pd.read_csv(datafile, index_col = 'Date')
+				data.index = pd.to_datetime(data.index)
+				dvalues = data[['Open', 'High', 'Low', 'Close', 'Volume']].values.tolist()
+				vol = data['Volume']
+				price = data['Close']
+				pdates = mdates.date2num(data.index)
+				ohlc = [ [pdates[i]] + dvalues[i] for i in range(len(pdates)) ]
+				sma20 = data['Close'].rolling(20).mean()
+				ema9 = data['Close'].ewm(9).mean()
 
-						ax1.xaxis.set_major_locator(mticker.MaxNLocator(5))
-						plt.setp(ax1.get_xticklabels(), visible = False)
-						ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d %y'))
+				ax1.clear()
 
 
+				if middleIndicator != "none":
+					for eachMA in middleIndicator:
+						if eachMA[0] == "sma":
+							sma = eachMA[1]
+							ax1.plot(data.index, data['Close'].rolling(sma).mean())
 
 
-						title = "Tsla open prices\nLast Price : " + str(price[-1])
-						ax1.set_title(title)					
-					elif Strat == "Breakout":
-						#will eventually have an automated strategy
-						popupmsg("not available yet")
+						if eachMA[0] == "ema":
+							ema = eachMA[1]
+							ax1.plot(data.index, data['Close'].ewm(ema).mean())
 
-					elif Strat == "PullBack":
-						#will eventually have an automated strategy
-						popupmsg("not available yet")
+					#ax1.legend(loc=0)
+				if topIndicator[0] == "n":
+					ax0.plot(data.index, rsiIndicator(window_length), color = 'orange')
+					ax0.axhline(70, color = 'red', linestyle='--', linewidth = 0.3)
+					ax0.axhline(30, color = 'red', linestyle='--', linewidth = 0.3)
 
-					elif Strat == "Supernova":
-						#will eventually have an automated strategy
-						popupmsg("not available yet")
+					w = str(window_length)
 
-				except Exception as e:
-					print("failed because of: ", e)
+				elif topIndicator[0] != "n":
+					ax0.plot(data.index, rsiIndicator(topIndicator[1]), color = 'orange')
+					ax0.axhline(70, color = 'red', linestyle='--', linewidth = 0.3)
+					ax0.axhline(30, color = 'red', linestyle='--', linewidth = 0.3)
 
-
-					#this is the reason why the graph changes when its other than tick data
-			else:
-				if counter > 12:
-					try:
-						
-						if topIndicator != "none" and bottomIndicator != "none":
-							# Main Graph
-							ax1 = plt.subplot2grid((6,4), (1,0), rowspan=3, colspan=4)
-							# Volume
-							ax2 = plt.subplot2grid((6,4), (4,0), sharex=ax1, rowspan=1, colspan=4)
-							# Bottom Indicator
-							ax3 = plt.subplot2grid((6,4), (5,0), sharex=ax1, rowspan=1, colspan=4)
-							# Top Indicator
-							ax0 = plt.subplot2grid((6,4), (0,0), sharex=ax1, rowspan=1, colspan=4)
-
-						elif topIndicator != "none":
-							# Main Graph
-							ax1 = plt.subplot2grid((6,4), (1,0), rowspan=3, colspan=4)
-							# Volume
-							ax2 = plt.subplot2grid((6,4), (4,0), sharex=ax1, rowspan=1, colspan=4)
-							# Top Indicator
-							ax0 = plt.subplot2grid((6,4), (0,0), sharex=ax1, rowspan=1, colspan=4)
-
-						elif bottomIndicator != "none":
-							# Main Graph
-							ax1 = plt.subplot2grid((6,4), (1,0), rowspan=3, colspan=4)
-							# Volume
-							ax2 = plt.subplot2grid((6,4), (4,0), sharex=ax1, rowspan=1, colspan=4)
-							# Bottom Indicator
-							ax3 = plt.subplot2grid((6,4), (5,0), sharex=ax1, rowspan=1, colspan=4)
-						else:
-							# Main Graph
-							ax1 = plt.subplot2grid((6,4), (1,0), rowspan=3, colspan=4)
-							# Volume
-							ax2 = plt.subplot2grid((6,4), (4,0), sharex=ax1, rowspan=1, colspan=4)
-
-						#get the csv file from the api
-						ax1 = plt.subplot2grid((6,4), (0,0), rowspan=5, colspan=4)
-						ax2 = plt.subplot2grid((6,4), (5,0), rowspan=1, colspan=4, sharex=ax1)
-						#eventually going to pull the csv from ib
-						datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
-						data = pd.read_csv(datafile, index_col = 'Date')
-						data.index = pd.to_datetime(data.index)
-						dvalues = data[['Open', 'High', 'Low', 'Close', 'Volume']].values.tolist()
-						vol = data['Volume']
-						pdates = mdates.date2num(data.index)
-						ohlc = [ [pdates[i]] + dvalues[i] for i in range(len(pdates)) ]
-						sma20 = data['Close'].rolling(20).mean()
-						ema9 = data['Close'].ewm(9).mean()
+					w = str(topIndicator[1])
 
 
-						ax1.clear()
-						#ax1.plot_date(date, price, "g", label="open")
-						candlestick_ohlc(ax1, ohlc, width=0.4)
-						ax1.plot_date(data.index, sma20, "g", label="SMA20")
-						ax1.plot_date(data.index, ema9, "b", label="EMA9")
-						ax2.fill_between(pdates, 0, vol, facecolor = "#138A54")
+				csticks = candlestick_ohlc(ax1, ohlc, width=0.5, colorup='#77d879', colordown='#db3f3f')
 
-						ax1.xaxis.set_major_locator(mticker.MaxNLocator(5))
-						plt.setp(ax1.get_xticklabels(), visible = False)
-						ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d %y'))
-					
+				ax2.fill_between(pdates, 0, vol, facecolor = "#138A54")
+				ax2.set_ylabel("volume")
+				ax1.set_ylabel("Price")
+				ax0.set_ylabel("RSI " + w)
+				ax3.set_ylabel("MACD")
 
-					except Exception as e:
-						print("failed in the non-tick animate:", str(e))
+
+				ax1.xaxis.set_major_locator(mticker.MaxNLocator(5))
+				plt.setp(ax1.get_xticklabels(), visible = False)
+				plt.setp(ax0.get_xticklabels(), visible = False)
+				plt.setp(ax2.get_xticklabels(), visible = False)
+
+				ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d %y'))
+
+				title = "Tsla open prices\nLast Price : " + str(price[-1])
+				ax0.set_title(title)
+
+
+				if Strat == "Breakout":
+					#will eventually have an automated strategy
+					popupmsg("not available yet")
+
+				elif Strat == "PullBack":
+					#will eventually have an automated strategy
+					popupmsg("not available yet")
+
+				elif Strat == "Supernova":
+					#will eventually have an automated strategy
+					popupmsg("not available yet")
+
+
+
+			except Exception as e:
+				print("failed because of: ", e)
 
 
 class StonkBot(tk.Tk):
@@ -476,15 +490,11 @@ class StonkBot(tk.Tk):
 		menuBar.add_cascade(label="OHLC Interval", menu=OHLC)
 
 		topIndi = tk.Menu(menuBar, tearoff=1)
-		topIndi.add_command(label="None",
-							command = lambda: addTopIndicator('none'))
-		topIndi.add_separator()
+
 		topIndi.add_command(label = "RSI",
 								command=lambda: addTopIndicator('rsi'))
-		topIndi.add_command(label = "MACD",
-								command=lambda: addTopIndicator('macd'))
 
-		menuBar.add_cascade(label = "Top Indicator", menu = topIndi)
+		menuBar.add_cascade(label = "RSI", menu = topIndi)
 
 
 		mainI = tk.Menu(menuBar, tearoff=1)
@@ -499,15 +509,11 @@ class StonkBot(tk.Tk):
 		menuBar.add_cascade(label = "Main/middle Indicator", menu = mainI)
 
 		bottomI = tk.Menu(menuBar, tearoff=1)
-		bottomI.add_command(label="None",
-							command = lambda: addBottomIndicator('none'))
-		bottomI.add_separator()
-		bottomI.add_command(label = "RSI",
-								command=lambda: addBottomIndicator('rsi'))
+
 		bottomI.add_command(label = "MACD",
 								command=lambda: addBottomIndicator('macd'))
 		
-		menuBar.add_cascade(label = "Bottom Indicator", menu = bottomI)
+		menuBar.add_cascade(label = "MACD", menu = bottomI)
 
 
 		tradeButton = tk.Menu(menuBar, tearoff=1)
@@ -534,7 +540,6 @@ class StonkBot(tk.Tk):
 		startStop.add_command(label="Rause",
 								command=lambda: loadChart('start'))
 		menuBar.add_cascade(label = "Resume/Pause client", menu = startStop)
-
 
 
 
@@ -609,7 +614,7 @@ class GraphPage(tk.Frame):
 
 app = StonkBot()
 app.geometry("1000x800")
-ani = animation.FuncAnimation(fig, animate, interval=5000)
+ani = animation.FuncAnimation(fig, animate, interval=10000)
 app.mainloop()
 
 
