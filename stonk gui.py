@@ -26,7 +26,7 @@ LARGE_FONT = ("verdana", 12)
 NORM_FONT = ("verdana", 10)
 SMALL_FONT = ("verdana", 8)
 
-style.use("ggplot")
+style.use("dark_background")
 
 fig, ax1 = plt.subplots(figsize = (12,6))
 #fig = plt.figure()
@@ -53,6 +53,8 @@ chartLoad = True
 lightColor = "00A3E0"
 darkColor = "1883A54"
 window_length = 14
+
+datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
 
 EMAs = []
 SMAs = []
@@ -244,7 +246,7 @@ def addBottomIndicator(what):
     	label.pack(side="top", fill="x", pady=10)
 
     	e = ttk.Entry(rsiQ)
-    	e.insert(0,14)
+    	e.insert(0,9)
     	e.pack()
     	e.focus_set()
 
@@ -255,7 +257,7 @@ def addBottomIndicator(what):
     		periods = (e.get())
     		group = []
     		group.append("rsi")
-    		group.append(periods)
+    		group.append(int(periods))
 
     		bottomIndicator = group
     		counter = 9000
@@ -316,8 +318,6 @@ def animate(i):
 
 	#create rsi calculations right here
 	def rsiIndicator(window_length):
-		#try:
-		datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
 		data = pd.read_csv(datafile, index_col = 'Date')
 		data.index = pd.to_datetime(data.index)
 		p = data['Close']
@@ -335,6 +335,20 @@ def animate(i):
 
 		return RSI1
 
+
+
+	def macdIndicator():
+		data = pd.read_csv(datafile, index_col = 'Date')
+		ema26 = data['Close'].ewm(26).mean()
+		ema12 = data['Close'].ewm(12).mean()
+
+		macd = (ema12 - ema26)
+		exmacd = macd.ewm(span=9).mean()
+		ax3.plot(data.index, macd)
+		ax3.plot(data.index, exmacd)
+
+
+
 	if chartLoad:
 		if paneCount ==1:
 			try:
@@ -348,7 +362,6 @@ def animate(i):
 				ax0 = plt.subplot2grid((6,4), (0,0), rowspan=1, colspan=4, sharex=ax1)
 
 				#eventually going to pull the csv from ib
-				datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
 				data = pd.read_csv(datafile, index_col = 'Date')
 				data.index = pd.to_datetime(data.index)
 				dvalues = data[['Open', 'High', 'Low', 'Close', 'Volume']].values.tolist()
@@ -366,36 +379,75 @@ def animate(i):
 					for eachMA in middleIndicator:
 						if eachMA[0] == "sma":
 							sma = eachMA[1]
-							ax1.plot(data.index, data['Close'].rolling(sma).mean())
+							ax1.plot(data.index, data['Close'].rolling(sma).mean(), label=('sma', sma), linewidth=0.8)
 
 
 						if eachMA[0] == "ema":
 							ema = eachMA[1]
-							ax1.plot(data.index, data['Close'].ewm(ema).mean())
+							ax1.plot(data.index, data['Close'].ewm(ema).mean(), label=('sma', sma), linewidth=0.8)
 
-					#ax1.legend(loc=0)
+					ax1.legend(loc=0)
+
+
+
+
 				if topIndicator[0] == "n":
-					ax0.plot(data.index, rsiIndicator(window_length), color = 'orange')
-					ax0.axhline(70, color = 'red', linestyle='--', linewidth = 0.3)
-					ax0.axhline(30, color = 'red', linestyle='--', linewidth = 0.3)
+					ax0.plot(data.index, rsiIndicator(window_length), color = 'coral', linewidth=0.8)
+					ax0.axhline(50, color = 'blanchedalmond', linewidth = 20, alpha=0.2)
 
 					w = str(window_length)
 
 				elif topIndicator[0] != "n":
-					ax0.plot(data.index, rsiIndicator(topIndicator[1]), color = 'orange')
-					ax0.axhline(70, color = 'red', linestyle='--', linewidth = 0.3)
-					ax0.axhline(30, color = 'red', linestyle='--', linewidth = 0.3)
+					ax0.plot(data.index, rsiIndicator(topIndicator[1]), color = 'coral', linewidth=0.8)
+					ax0.axhline(50, color = 'blanchedalmond', linewidth = 20, alpha=0.2)
 
 					w = str(topIndicator[1])
 
 
-				csticks = candlestick_ohlc(ax1, ohlc, width=0.5, colorup='#77d879', colordown='#db3f3f')
 
-				ax2.fill_between(pdates, 0, vol, facecolor = "#138A54")
+
+				csticks = candlestick_ohlc(ax1, ohlc, width=0.5, colorup='lime', colordown='red')
+
+
+
+
+				ema26 = data['Close'].ewm(26).mean()
+				ema12 = data['Close'].ewm(12).mean()
+				span = 9
+
+				if bottomIndicator[0] == "n":
+
+					macd = (ema12 - ema26)
+					exmacd = macd.ewm(span=span).mean()
+					ax3.plot(data.index, macd, label="MACD", color = '#EBD2BE', linewidth=0.8)
+					ax3.plot(data.index, exmacd, Label="MACD signal line", color='#E5A4CB', linewidth=0.8)
+					ax3.axhline(0, color = 'blanchedalmond', linestyle="dotted",linewidth = 0.4)
+					#ax3.fill_between(data.index, )
+
+					s = str(span)
+
+				elif bottomIndicator[0] != "n":
+					span = bottomIndicator[1]
+
+					macd = (ema12 - ema26)
+					exmacd = macd.ewm(span=span).mean()
+					ax3.plot(data.index, macd, label="MACD", color = '#EBD2BE', linewidth=0.8)
+					ax3.plot(data.index, exmacd, Label="MACD signal line", color='#E5A4CB', linewidth=0.8)
+					ax3.axhline(0, color = 'blanchedalmond', linestyle="dotted",linewidth = 0.4)
+
+					s = str(bottomIndicator[1])
+
+				ax3.legend(loc=0)
+
+
+
+
+
+				ax2.fill_between(pdates, 0, vol, facecolor = "aqua")
 				ax2.set_ylabel("volume")
 				ax1.set_ylabel("Price")
 				ax0.set_ylabel("RSI " + w)
-				ax3.set_ylabel("MACD")
+				ax3.set_ylabel("MACD" + s)
 
 
 				ax1.xaxis.set_major_locator(mticker.MaxNLocator(5))
@@ -614,7 +666,7 @@ class GraphPage(tk.Frame):
 
 app = StonkBot()
 app.geometry("1000x800")
-ani = animation.FuncAnimation(fig, animate, interval=10000)
+ani = animation.FuncAnimation(fig, animate, interval=1000)
 app.mainloop()
 
 
