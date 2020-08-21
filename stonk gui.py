@@ -32,8 +32,6 @@ fig, ax1 = plt.subplots(figsize = (12,6))
 #fig = plt.figure()
 #ax1 = fig.add_subplot(111)
 
-
-
 Strat = "None"
 #counter to force a update
 counter = 9000
@@ -130,6 +128,13 @@ def addMiddleIndicator(what):
     			b.pack()
     			tk.mainloop()
 
+    		if what == "vwap":
+    			group = []
+    			group.append("vwap")
+    			middleIndicator.append(group)
+    			counter = 9000
+    			print("middle indicator set to: ", middleIndicator)
+
 
     	else:
     		if what == "sma":
@@ -187,6 +192,15 @@ def addMiddleIndicator(what):
     			b = ttk.Button(midIQ, text="submit", width=10, command=callback)
     			b.pack()
     			tk.mainloop()
+
+    		if what == "vwap":
+    			group = []
+    			group.append("vwap")
+    			middleIndicator.append(group)
+    			counter = 9000
+    			print("middle indicator set to: ", middleIndicator)
+
+
 
     else:
     	middleIndicator = "none"
@@ -336,17 +350,15 @@ def animate(i):
 		return RSI1
 
 
-
-	def macdIndicator():
+	def calcVWAP():
 		data = pd.read_csv(datafile, index_col = 'Date')
-		ema26 = data['Close'].ewm(26).mean()
-		ema12 = data['Close'].ewm(12).mean()
+		data.index = pd.to_datetime(data.index)
+		v = data['Volume']
+		p = data['Close']
 
-		macd = (ema12 - ema26)
-		exmacd = macd.ewm(span=9).mean()
-		ax3.plot(data.index, macd)
-		ax3.plot(data.index, exmacd)
+		vwap = ((v * p).cumsum() / v.cumsum())
 
+		return vwap
 
 
 	if chartLoad:
@@ -373,18 +385,25 @@ def animate(i):
 				ema9 = data['Close'].ewm(9).mean()
 
 				ax1.clear()
+				ax1.grid(linestyle="-", linewidth=0.3, color="blanchedalmond", alpha=0.5)
 
 
 				if middleIndicator != "none":
 					for eachMA in middleIndicator:
 						if eachMA[0] == "sma":
 							sma = eachMA[1]
-							ax1.plot(data.index, data['Close'].rolling(sma).mean(), label=('sma', sma), linewidth=0.8)
+							p = str(sma)
+							ax1.plot(data.index, data['Close'].rolling(sma).mean(), label='SMA '+p, linewidth=0.8)
 
 
 						if eachMA[0] == "ema":
 							ema = eachMA[1]
-							ax1.plot(data.index, data['Close'].ewm(ema).mean(), label=('sma', sma), linewidth=0.8)
+							p = str(ema)
+							ax1.plot(data.index, data['Close'].ewm(ema).mean(), label='EMA '+p, linewidth=0.8)
+
+
+						if eachMA[0] == "vwap":
+							ax1.plot(data.index, calcVWAP(), label='VWAP', linewidth=0.8)
 
 					ax1.legend(loc=0)
 
@@ -402,6 +421,8 @@ def animate(i):
 					ax0.axhline(50, color = 'blanchedalmond', linewidth = 20, alpha=0.2)
 
 					w = str(topIndicator[1])
+
+				ax0.grid(linestyle="-", linewidth=0.3, color="blanchedalmond", alpha=0.5)
 
 
 
@@ -439,7 +460,7 @@ def animate(i):
 
 				ax3.legend(loc=0)
 
-
+				ax3.grid(linestyle="-", linewidth=0.3, color="blanchedalmond", alpha=0.5)
 
 
 
@@ -447,7 +468,9 @@ def animate(i):
 				ax2.set_ylabel("volume")
 				ax1.set_ylabel("Price")
 				ax0.set_ylabel("RSI " + w)
-				ax3.set_ylabel("MACD" + s)
+				ax3.set_ylabel("MACD " + s)
+
+				ax2.grid(linestyle="-", linewidth=0.3, color="blanchedalmond", alpha=0.5)
 
 
 				ax1.xaxis.set_major_locator(mticker.MaxNLocator(5))
@@ -557,6 +580,8 @@ class StonkBot(tk.Tk):
 								command=lambda: addMiddleIndicator('sma'))
 		mainI.add_command(label = "EMA",
 								command=lambda: addMiddleIndicator('ema'))
+		mainI.add_command(label = "VWAP",
+								command=lambda: addMiddleIndicator('vwap'))
 		
 		menuBar.add_cascade(label = "Main/middle Indicator", menu = mainI)
 
