@@ -29,11 +29,8 @@ SMALL_FONT = ("verdana", 8)
 style.use("dark_background")
 
 fig, ax1 = plt.subplots(figsize = (12,6))
-#fig = plt.figure()
-#ax1 = fig.add_subplot(111)
 
 Strat = "None"
-#counter to force a update
 counter = 9000
 ProgramName = "Bo"
 
@@ -324,6 +321,22 @@ def popupmsg(msg):
 	B1.pack()
 	popup.mainloop()
 
+######################################################################contract part
+
+#connect this method to a tab and enter in the contract
+#verify if contract is valid or not
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def animate(i):
@@ -377,6 +390,19 @@ def animate(i):
 				data = pd.read_csv(datafile, index_col = 'Date')
 				data.index = pd.to_datetime(data.index)
 				dvalues = data[['Open', 'High', 'Low', 'Close', 'Volume']].values.tolist()
+
+
+				##############################################use this for candle recognition###################################
+
+				#val = dvalues[-1]
+				#gets the whole entire candle info
+
+				#print(val)
+				#gets the open, high, low, or volume of that candle
+				#print(val[1])
+
+				################################################################################################################
+
 				vol = data['Volume']
 				price = data['Close']
 				pdates = mdates.date2num(data.index)
