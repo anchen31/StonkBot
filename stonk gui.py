@@ -22,6 +22,54 @@ import numpy as np
 from ib_insync import *
 
 
+#ib = IB()
+#ib.connect('127.0.0.1', 7497, clientId=4)
+
+
+#contract1 = Stock('TSLA', 'SMART', 'USD')
+
+#1 pull data from here
+
+#bars = ib.reqHistoricalData(
+#       contract1,
+#        endDateTime='',
+#        durationStr='900 S',
+#        barSizeSetting='1 min',
+#        whatToShow='MIDPOINT',
+#        useRTH=True,
+#        formatDate=1,
+#        keepUpToDate=False)
+
+
+#2 create empty df outside with orignal columns preset 
+#df1 = pd.DataFrame(columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
+
+#3 loop to get individual bar and parse data and put accordingly into df columns 
+
+#get the amount of bars of data curently
+#lenBars = len(bars)
+
+#for b in range(lenBars):
+#    b = int(b)
+#    df1.at[b, 'Date'] = bars[b].date
+#    df1.at[b, 'Open'] = bars[b].open
+#    df1.at[b, 'High'] = bars[b].high
+#    df1.at[b, 'Low'] = bars[b].low
+#    df1.at[b, 'Close'] = bars[b].close
+#    df1.at[b, 'Volume'] = bars[b].volume
+
+
+#4 store df into a csv
+
+#df1 = df1.set_index(['Date'])
+
+
+#df1.to_csv('test.csv')
+
+
+
+
+
 LARGE_FONT = ("verdana", 12)
 NORM_FONT = ("verdana", 10)
 SMALL_FONT = ("verdana", 8)
@@ -49,7 +97,9 @@ lightColor = "00A3E0"
 darkColor = "1883A54"
 window_length = 14
 
-datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
+#datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
+
+datafile = 'C:/Users/andyc/Documents/Visual Studio 2019/Code Snippets/Python/My Code Snippets/Stonk bot/test1.csv'
 
 EMAs = []
 SMAs = []
@@ -450,10 +500,9 @@ def animate(i):
 
 				ax0.grid(linestyle="-", linewidth=0.3, color="blanchedalmond", alpha=0.5)
 
+				#################################################  Has something to do with sizing  ##################################################
 
-
-
-				csticks = candlestick_ohlc(ax1, ohlc, width=0.5, colorup='lime', colordown='red')
+				csticks = candlestick_ohlc(ax1, ohlc, width=0.0004, colorup='lime', colordown='red')
 
 
 
@@ -504,7 +553,8 @@ def animate(i):
 				plt.setp(ax0.get_xticklabels(), visible = False)
 				plt.setp(ax2.get_xticklabels(), visible = False)
 
-				ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d %y'))
+				ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d %y %H %M'))
+
 
 				title = "Tsla open prices\nLast Price : " + str(price[-1])
 				ax0.set_title(title)
@@ -526,6 +576,12 @@ def animate(i):
 
 			except Exception as e:
 				print("failed because of: ", e)
+
+
+
+
+
+######################################################  tabs  ########################################################################################
 
 
 class StonkBot(tk.Tk):
@@ -552,6 +608,8 @@ class StonkBot(tk.Tk):
 		fileMenu.add_command(label="Exit", command=quit)
 		menuBar.add_cascade(label="File", menu=fileMenu)
 
+
+
 		stratChoice = tk.Menu(menuBar, tearoff=1)
 
 		stratChoice.add_command(label="None", command=lambda: popupmsg("This will result in manual trading"))
@@ -564,8 +622,10 @@ class StonkBot(tk.Tk):
 		#stratChoice.add_command(label="Supernova", command=lambda: changeStrategy("Supernova", "Sn"))
 		stratChoice.add_command(label="Supernova", command=lambda: popupmsg("not available yet"))
 
-
 		menuBar.add_cascade(label="Strat", menu=stratChoice)
+
+
+
 
 		dataTF = tk.Menu(menuBar, tearoff=1)
 		dataTF.add_command(label = "Tick",
@@ -578,6 +638,10 @@ class StonkBot(tk.Tk):
 							command=lambda: changeTimeFrame('7d'))
 		menuBar.add_cascade(label = "Data Time Frame", menu = dataTF)
 
+
+
+
+
 		OHLC = tk.Menu(menuBar, tearoff=1)
 		OHLC.add_command(label = "Tick",
 							command=lambda: changeTimeFrame('tick'))
@@ -587,8 +651,11 @@ class StonkBot(tk.Tk):
 							command=lambda: changeSampleSize('5Min', 0.0005))
 		OHLC.add_command(label = "1 hour",
 							command=lambda: changeSampleSize('60Min', 0.0005))
-
 		menuBar.add_cascade(label="OHLC Interval", menu=OHLC)
+
+
+
+
 
 		topIndi = tk.Menu(menuBar, tearoff=1)
 
@@ -596,6 +663,9 @@ class StonkBot(tk.Tk):
 								command=lambda: addTopIndicator('rsi'))
 
 		menuBar.add_cascade(label = "RSI", menu = topIndi)
+
+
+
 
 
 		mainI = tk.Menu(menuBar, tearoff=1)
@@ -611,12 +681,19 @@ class StonkBot(tk.Tk):
 		
 		menuBar.add_cascade(label = "Main/middle Indicator", menu = mainI)
 
+
+
+
+
 		bottomI = tk.Menu(menuBar, tearoff=1)
 
 		bottomI.add_command(label = "MACD",
 								command=lambda: addBottomIndicator('macd'))
 		
 		menuBar.add_cascade(label = "MACD", menu = bottomI)
+
+
+
 
 
 		tradeButton = tk.Menu(menuBar, tearoff=1)
@@ -636,6 +713,10 @@ class StonkBot(tk.Tk):
 								command=lambda: popupmsg("This is not live yet"))
 
 		menuBar.add_cascade(label="Trading", menu=tradeButton)
+
+
+
+
 
 		startStop = tk.Menu(menuBar, tearoff = 1)
 		startStop.add_command(label="Resume",
@@ -668,6 +749,12 @@ class StonkBot(tk.Tk):
 		frame = self.frames[cont]
 		frame.tkraise()
 		#####everything above here sets up for adding windows
+
+
+
+
+
+####################################################################  Pages editor  ###########################################################################################		
 
 class StartPage(tk.Frame):
 
