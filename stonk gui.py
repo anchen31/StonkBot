@@ -20,51 +20,56 @@ import pandas as pd
 import numpy as np
 
 from ib_insync import *
+import time
 
 
-#ib = IB()
-#ib.connect('127.0.0.1', 7497, clientId=4)
+global df1
+
+ib = IB()
+ib.connect('127.0.0.1', 7497, clientId=3)
 
 
-#contract1 = Stock('TSLA', 'SMART', 'USD')
+contract1 = Stock('TSLA', 'SMART', 'USD')
 
 #1 pull data from here
 
-#bars = ib.reqHistoricalData(
-#       contract1,
-#        endDateTime='',
-#        durationStr='900 S',
-#        barSizeSetting='1 min',
-#        whatToShow='MIDPOINT',
-#        useRTH=True,
-#        formatDate=1,
-#        keepUpToDate=False)
+bars = ib.reqHistoricalData(
+	contract1, 
+	endDateTime='',
+    durationStr='1 D',
+    barSizeSetting='1 min',
+    whatToShow='TRADES',
+    useRTH=True,
+    formatDate=1,
+    keepUpToDate=True)
 
 
 #2 create empty df outside with orignal columns preset 
-#df1 = pd.DataFrame(columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
+df1 = pd.DataFrame(columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
 
 #3 loop to get individual bar and parse data and put accordingly into df columns 
 
 #get the amount of bars of data curently
-#lenBars = len(bars)
+lenBars = len(bars)
 
-#for b in range(lenBars):
-#    b = int(b)
-#    df1.at[b, 'Date'] = bars[b].date
-#    df1.at[b, 'Open'] = bars[b].open
-#    df1.at[b, 'High'] = bars[b].high
-#    df1.at[b, 'Low'] = bars[b].low
-#    df1.at[b, 'Close'] = bars[b].close
-#    df1.at[b, 'Volume'] = bars[b].volume
+for b in range(lenBars):
+	b = int(b)
+	df1.at[b, 'Date'] = bars[b].date
+	df1.at[b, 'Open'] = bars[b].open
+	df1.at[b, 'High'] = bars[b].high
+	df1.at[b, 'Low'] = bars[b].low
+	df1.at[b, 'Close'] = bars[b].close
+	df1.at[b, 'Volume'] = bars[b].volume
 
 
 #4 store df into a csv
 
-#df1 = df1.set_index(['Date'])
+df1 = df1.set_index(['Date'])
 
 
-#df1.to_csv('test.csv')
+df1.to_csv('test.csv')
+
+
 
 
 
@@ -99,7 +104,11 @@ window_length = 14
 
 #datafile = 'C:/Users/andyc/AppData/Roaming/Sublime Text 3/Packages/User/pp for finance/tsla.csv'
 
-datafile = 'C:/Users/andyc/Documents/Visual Studio 2019/Code Snippets/Python/My Code Snippets/Stonk bot/test1.csv'
+#datafile = 'C:/Users/andyc/Documents/Visual Studio 2019/Code Snippets/Python/My Code Snippets/Stonk bot/test1.csv'
+
+datafile = 'test.csv'
+
+
 
 EMAs = []
 SMAs = []
@@ -385,13 +394,87 @@ def popupmsg(msg):
 
 
 
-
-
-
+#holder is used to iterate the time it takes to refresh the data pull. we are allowed 4 pulls per minute, to be safe we will pull data in a 20 second interval
+holder = 0
+global list1 
+global n
+list1 = []
+n = True
 
 def animate(i):
 	global refreshRate
 	global counter
+
+	global holder
+	global prevBar
+	global n
+	global df1
+
+	contract1 = Stock('TSLA', 'SMART', 'USD')
+
+#update the data in the csv	
+	holder = holder + 1
+
+	print(holder)
+
+	if holder == 20:
+		#pull data
+
+		bars = ib.reqHistoricalData(
+			contract1, 
+			endDateTime='',
+		    durationStr='1 D',
+		    barSizeSetting='1 min',
+		    whatToShow='TRADES',
+		    useRTH=True,
+		    formatDate=1,
+		    keepUpToDate=True)
+
+
+		#see if i can print out the first df from here? if I can print out the first df, i can add onto it without creating it again
+
+		#check if the previous bar is the same as the new bar
+		#first get the last bar and store it
+
+		while n == True:
+			prevBar = bars[-1].date
+
+			list1.append(prevBar)
+
+			n = False
+
+		if list1[-1] == bars[-2].date:
+			#store the new bar into prevBar
+			n = True
+
+
+			df1 = pd.DataFrame(columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
+
+			#3 loop to get individual bar and parse data and put accordingly into df columns 
+
+			#get the amount of bars of data curently
+			lenBars = len(bars)
+
+			for b in range(lenBars):
+				b = int(b)
+				df1.at[b, 'Date'] = bars[b].date
+				df1.at[b, 'Open'] = bars[b].open
+				df1.at[b, 'High'] = bars[b].high
+				df1.at[b, 'Low'] = bars[b].low
+				df1.at[b, 'Close'] = bars[b].close
+				df1.at[b, 'Volume'] = bars[b].volume
+
+
+			#4 store df into a csv
+
+			df1 = df1.set_index(['Date'])
+			print(df1)
+
+			df1.to_csv('test.csv')		
+
+
+		holder = 0
+
 
 	#create rsi calculations right here
 	def rsiIndicator(window_length):
@@ -502,7 +585,7 @@ def animate(i):
 
 				#################################################  Has something to do with sizing  ##################################################
 
-				csticks = candlestick_ohlc(ax1, ohlc, width=0.0004, colorup='lime', colordown='red')
+				csticks = candlestick_ohlc(ax1, ohlc, width=0.00004, colorup='lime', colordown='red')
 
 
 
@@ -605,7 +688,11 @@ class StonkBot(tk.Tk):
 		fileMenu = tk.Menu(menuBar, tearoff=0)
 		fileMenu.add_command(label='Save settings', command = lambda: popupmsg("Not supported just yet!"))
 		fileMenu.add_separator()
-		fileMenu.add_command(label="Exit", command=quit)
+		#fileMenu.add_command(label="Exit", command=quit)
+
+		fileMenu.add_command(label="Exit", command=lambda:[exit(), ib.disconnect()])
+
+
 		menuBar.add_cascade(label="File", menu=fileMenu)
 
 
