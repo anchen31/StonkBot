@@ -26,7 +26,7 @@ import time
 global df1
 
 ib = IB()
-ib.connect('127.0.0.1', 7497, clientId=3)
+ib.connect('127.0.0.1', 7497, clientId=2)
 
 
 contract1 = Stock('TSLA', 'SMART', 'USD')
@@ -409,8 +409,10 @@ def animate(i):
 	global prevBar
 	global n
 	global df1
+	global contract1
 
 	contract1 = Stock('TSLA', 'SMART', 'USD')
+
 
 #update the data in the csv	
 	holder = holder + 1
@@ -546,6 +548,7 @@ def animate(i):
 				ax1.clear()
 				ax1.grid(linestyle="-", linewidth=0.3, color="blanchedalmond", alpha=0.5)
 
+				#INDICATORS #########################################################################################################
 
 				if middleIndicator != "none":
 					for eachMA in middleIndicator:
@@ -583,9 +586,9 @@ def animate(i):
 
 				ax0.grid(linestyle="-", linewidth=0.3, color="blanchedalmond", alpha=0.5)
 
-				#################################################  Has something to do with sizing  ##################################################
+				
 
-				csticks = candlestick_ohlc(ax1, ohlc, width=0.00004, colorup='lime', colordown='red')
+				csticks = candlestick_ohlc(ax1, ohlc, width=0.0002, colorup='lime', colordown='red')
 
 
 
@@ -638,8 +641,16 @@ def animate(i):
 
 				ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d %y %H %M'))
 
+				#gets the price of the sotck based on the contract
 
-				title = "Tsla open prices\nLast Price : " + str(price[-1])
+				ib.reqMktData(contract1, '', False, False)
+				ticker = ib.ticker(contract1)
+				ib.sleep(0.1)
+
+				sPrice = ticker.marketPrice()
+				print(sPrice)
+				#title = "Tsla open prices\nLast Price : " + str(price[-1])
+				title = "Tsla open prices\nLast Price : " + str(sPrice)
 				ax0.set_title(title)
 
 
