@@ -16,4 +16,6 @@ What I am currently working on-
 *will use linear regression on these pivot points to create support and resistance lines
 *will implement a nerual network or an artifical intelligence solution to buy/sell automatically.
 
-![](images/
+How it looks, hope you enjoy!
+
+![Screenshot (77)](https://user-images.githubusercontent.com/42586375/101235017-85489000-3679-11eb-958d-c3782484d2f9.png)
