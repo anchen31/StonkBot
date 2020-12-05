@@ -15,3 +15,5 @@ What I am currently working on-
 *create pivot points for the graphs and use those points for machine learning
 *will use linear regression on these pivot points to create support and resistance lines
 *will implement a nerual network or an artifical intelligence solution to buy/sell automatically.
+
+![](images/
