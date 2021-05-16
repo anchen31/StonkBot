@@ -512,6 +512,11 @@ def animate(i):
 				ax1 = plt.subplot2grid((6,4), (1,0), rowspan=3, colspan=4)
 				# Volume
 				ax2 = plt.subplot2grid((6,4), (4,0), rowspan=1, colspan=4, sharex=ax1)
+				ax3 = plt.subplot2grid((6,4), (5,0), rowspan=1, colspan=4, sharex=ax1)
+				# Top Indicator
+				ax0 = plt.subplot2grid((6,4), (0,0), rowspan=1, colspan=4, sharex=ax1)
+
+				#eventually going to pull the csv from ib
 				data = pd.read_csv(datafile, index_col = 'Date')
 				data.index = pd.to_datetime(data.index)
 				dvalues = data[['Open', 'High', 'Low', 'Close', 'Volume']].values.tolist()
